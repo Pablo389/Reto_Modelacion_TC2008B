@@ -1,6 +1,6 @@
 from fastapi import FastAPI, WebSocket
 from model.camera_agent import CameraAgent
-from model.construction_model import MyModel
+from model.construction_model import SurveillanceModel
 import numpy as np
 import base64
 import cv2
@@ -16,6 +16,8 @@ def read_root():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
 
+    model = SurveillanceModel()
+    model.setup()
     while True:
         data = await websocket.receive_text()  # Espera mensaje del cliente
         if data:
@@ -36,12 +38,17 @@ async def websocket_endpoint(websocket: WebSocket):
                 # Decodificar el arreglo NumPy a una imagen OpenCV
                 img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-                camera_agent = CameraAgent(MyModel())
+                camera_id = json_data.get("id", "")
+                print(f"Id de la camara: {camera_id}")
+
+                #model.step(camera_id, img)
+
+                camera_agent = CameraAgent(SurveillanceModel())
                 suspicious_objects = camera_agent.detect_objects(img)
                 print(f"Objetos sospechosos detectados: {suspicious_objects}")
                 print("Id de la camara: ", json_data.get("id", ""))
                 
-                await websocket.send_json({"status": "vision completed", 'suspicious_objects': suspicious_objects})
+                await websocket.send_json({"status": "vision completed", 'suspicious_objects': 'Hola'})
             
             except json.JSONDecodeError:
                 print("Error al decodificar el JSON recibido")
@@ -50,7 +57,6 @@ async def websocket_endpoint(websocket: WebSocket):
             except Exception as e:
                 print(f"Error procesando la imagen: {e}")
             
-        
         elif data == "close":
             await websocket.close()
             break

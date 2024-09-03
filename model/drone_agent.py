@@ -9,7 +9,11 @@ class Drone(ap.Agent):
         self.position = initial_position   # Posición inicial del dron UNITY DARA LA POSICION DESDE LA QUE SE TIENE QUE LLEGAR
         self.reached_destination = False
 
-    def investigate(self, position, object_name):
+    def load_ontology(self):
+        # Cargar la ontología creada
+        self.ontology = get_ontology("ontology.owl").load()
+
+    def investigate(self, position, object_name): #Esta es la posicion que me manda en un principio unity deol objeto sospechoso
         start = self.position
         print(f"Sus position: {position}")
         modified_position = (position[0], position[1] + 2, position[2])
@@ -63,8 +67,8 @@ class Drone(ap.Agent):
 
     def is_suspicious(self, object_name):
         # Lógica para determinar si el objeto es sospechoso utilizando la ontología
-        obj_instance = onto.search_one(iri=f"*{object_name}")
-        return isinstance(obj_instance, onto.SuspiciousObject) if obj_instance else False
+        obj_instance = self.ontology.search_one(iri=f"*{object_name}")
+        return isinstance(obj_instance, self.ontology.SuspiciousObject) if obj_instance else False
 
     def move_to(self, position): #ESTO TECNICAMENTE NO LO NECESITAMOS PORQUE SE MUEVE EN UNITY, SEGUN NUESTRAS COORDENADAS
         if self.position != position:

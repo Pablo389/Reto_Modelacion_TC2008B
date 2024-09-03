@@ -1,11 +1,13 @@
 import agentpy as ap
 import numpy as np
+from model.camera_agent import CameraAgent
+from model.drone_agent import Drone
+from model.guard_agent import SecurityGuard
 
 class SurveillanceModel(ap.Model):
     def setup(self): #FALTA VER COMO ESTAN LOS OBSTACULOS EN UNITY TAL CUAL Y VER LO DE LAS POSICIONES ESPECIFICAS, PARA EL ESPACIO
-        self.space = ap.Space(self, shape=[15, 15, 15])
 
-        self.cameras = [Camera(self) for _ in range(4)]
+        self.cameras = [CameraAgent(self) for _ in range(4)]
         self.guard = [SecurityGuard(self) for _ in range(1)]
 
         for camera in self.cameras:
@@ -20,7 +22,9 @@ class SurveillanceModel(ap.Model):
         print(f"Drone position: {drone_position}")
         print(f"Guard position: {guard_position}")
 
-        self.drone = [Drone(self, initial_position=drone_position)]
+        self.drone = [Drone(self, initial_position=drone_position)] #este agente dron no va aqui, debería inicializa
+
+        self.space = ap.Space(self, shape=[15, 15, 15])
 
         self.space.add_agents(self.cameras, positions=camera_positions, random=False)
         self.space.add_agents(self.drone, positions=[drone_position], random=False)  # Pasar como lista de tuplas
@@ -41,8 +45,12 @@ class SurveillanceModel(ap.Model):
     def update(self):
         pass
 
-    def step(self):
+    def step(self, camera_id, img):
+        #print(self.space.id)
         for camera in self.cameras:
-            camera.process_detection()
-        for drone in self.drone:
-            print(f"Drone position: {drone.position}")
+            #print(camera.id)
+            if camera.id == camera_id:
+                print(f"Camera {camera_id} is active")
+                camera.detect_objects(img)
+        #print(self.guard[0].id)
+        #print(self.drone[0].id)

@@ -10,6 +10,7 @@ class CameraAgent(ap.Agent):
         self.suspicious_objects = set()  # Conjunto para objetos sospechosos
         self.load_ontology()
         self.model = YOLO("yolov8s.pt")  # Cargar el modelo YOLO solo una vez
+        self.is_moving = True
     
     def load_ontology(self):
         # Cargar la ontología creada
@@ -23,6 +24,7 @@ class CameraAgent(ap.Agent):
         """ Método para procesar objetos detectados """
         # Cargar y procesar la imagen usando el modelo YOLO
         results = self.model(image_path)
+        results[0].show()
         
         # Extraer objetos detectados
         detected_objects = []
@@ -47,3 +49,18 @@ class CameraAgent(ap.Agent):
                 print(f"Alerta: Objeto desconocido detectado - {obj}")
         
         return suspicious_detected
+    
+    def detect_objects_dummy(self):
+        suspicious_detected = [{'name': 'car', 'class': 2, 'confidence': 0.93602, 'box': {'x1': 254.27472, 'y1': 318.5394, 'x2': 804.0683, 'y2': 593.53308}}]
+        positions = [10,2,6]
+        obj = {'object':'traffic light', 'position': positions}
+        #detecta una objeto sospechoso y manda a llamar donde esta el dron en ese momento
+        #osea aqui debería retornar algo 
+    
+    def alert_drone(self, obj): #Ver como tengo que mandar obj para que lo reciba el drone
+        if self.model.drone:
+            drone = self.model.drone[0]
+            drone.investigate(obj['position'], obj['object'])
+    
+    def stop_moving(self):
+        self.is_moving = False
