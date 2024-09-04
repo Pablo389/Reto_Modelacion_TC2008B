@@ -7,8 +7,8 @@ from model.guard_agent import SecurityGuard
 class SurveillanceModel(ap.Model):
     def setup(self): #FALTA VER COMO ESTAN LOS OBSTACULOS EN UNITY TAL CUAL Y VER LO DE LAS POSICIONES ESPECIFICAS, PARA EL ESPACIO
 
-        self.cameras = [CameraAgent(self) for _ in range(4)]
-        self.guard = [SecurityGuard(self) for _ in range(1)]
+        self.cameras = ap.AgentList(self, 4, CameraAgent)
+        #self.guard = ap.AgentList(self, 1, SecurityGuard)
 
         for camera in self.cameras:
             camera.unique_id = self.cameras.index(camera) + 1
@@ -28,7 +28,7 @@ class SurveillanceModel(ap.Model):
 
         self.space.add_agents(self.cameras, positions=camera_positions, random=False)
         self.space.add_agents(self.drone, positions=[drone_position], random=False)  # Pasar como lista de tuplas
-        self.space.add_agents(self.guard, positions=guard_position, random=False)
+        #self.space.add_agents(self.guard, positions=guard_position, random=False)
 
         self.grid = np.ones((15, 15, 15))
 
@@ -49,8 +49,13 @@ class SurveillanceModel(ap.Model):
         #print(self.space.id)
         for camera in self.cameras:
             #print(camera.id)
-            if camera.id == camera_id:
+            if camera.id == int(camera_id):
                 print(f"Camera {camera_id} is active")
-                camera.detect_objects(img)
+                suspicious = camera.detect_objects(img)
+                if suspicious:
+                    return "suspicious"
+        
+        return "safe"
+
         #print(self.guard[0].id)
         #print(self.drone[0].id)

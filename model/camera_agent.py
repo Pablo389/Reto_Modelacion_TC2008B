@@ -24,7 +24,7 @@ class CameraAgent(ap.Agent):
         """ Método para procesar objetos detectados """
         # Cargar y procesar la imagen usando el modelo YOLO
         results = self.model(image_path)
-        results[0].show()
+        #results[0].show()
         
         # Extraer objetos detectados
         detected_objects = []
@@ -57,7 +57,8 @@ class CameraAgent(ap.Agent):
         #detecta una objeto sospechoso y manda a llamar donde esta el dron en ese momento
         #osea aqui debería retornar algo 
     
-    def alert_drone(self, obj): #Ver como tengo que mandar obj para que lo reciba el drone
+    def alert_drone(self, obj): #Ver como tengo que mandar obj para que lo reciba el drone QUITAR!!!
+        #Esta funcion no debe exisitir, debemos usa ralgo de tipo mensajería en boradcast y ya el dron lo recibe
         if self.model.drone:
             drone = self.model.drone[0]
             drone.investigate(obj['position'], obj['object'])

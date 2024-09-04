@@ -41,14 +41,18 @@ async def websocket_endpoint(websocket: WebSocket):
                 camera_id = json_data.get("id", "")
                 print(f"Id de la camara: {camera_id}")
 
-                #model.step(camera_id, img)
+                suspicious = model.step(camera_id, img)
+                if suspicious == "suspicious":
+                    await websocket.send_json({"status": "suspicious", "camera_id": camera_id})
+                else:
+                    await websocket.send_json({"status": "safe", "camera_id": camera_id})
 
-                camera_agent = CameraAgent(SurveillanceModel())
-                suspicious_objects = camera_agent.detect_objects(img)
-                print(f"Objetos sospechosos detectados: {suspicious_objects}")
-                print("Id de la camara: ", json_data.get("id", ""))
+                #camera_agent = CameraAgent(SurveillanceModel())
+                #suspicious_objects = camera_agent.detect_objects(img)
+                #print(f"Objetos sospechosos detectados: {suspicious_objects}")
+                #print("Id de la camara: ", json_data.get("id", ""))
                 
-                await websocket.send_json({"status": "vision completed", 'suspicious_objects': 'Hola'})
+                #await websocket.send_json({"status": "vision completed", 'suspicious_objects': 'Hola'})
             
             except json.JSONDecodeError:
                 print("Error al decodificar el JSON recibido")
@@ -56,6 +60,15 @@ async def websocket_endpoint(websocket: WebSocket):
                 print("El JSON recibido no contiene la clave 'image_base64'")
             except Exception as e:
                 print(f"Error procesando la imagen: {e}")
+                try:
+                    json_data = json.loads(data)
+                    #print(f"JSON recibido: {json_data}")
+                    
+                    # Acceder a la imagen en base64 del JSON
+                    drone_position = json_data.get("coordinates", "")
+                    print(f"Posicion del dron: {drone_position}")
+                except KeyError:
+                    print("El JSON recibido no contiene la clave 'id'")
             
         elif data == "close":
             await websocket.close()
