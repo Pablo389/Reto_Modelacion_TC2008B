@@ -8,6 +8,9 @@ import json
 
 app = FastAPI()
 
+model = SurveillanceModel()
+model.setup()
+
 @app.get("/")
 def read_root():
     return {"message": "Warehouse Simulation API"}
@@ -16,60 +19,57 @@ def read_root():
 async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
 
-    model = SurveillanceModel()
-    model.setup()
     while True:
         data = await websocket.receive_text()  # Espera mensaje del cliente
         if data:
             try:
-                # Parsear el string JSON recibido
+                # Decodificar el JSON recibido
                 json_data = json.loads(data)
-                #print(f"JSON recibido: {json_data}")
-                
-                # Acceder a la imagen en base64 del JSON
-                base64_str = json_data.get("image_base64", "")
-                
-                # Decodificar la cadena base64 a bytes
-                img_data = base64.b64decode(base64_str)
-                
-                # Convertir los bytes a un arreglo NumPy
-                nparr = np.frombuffer(img_data, np.uint8)
-                
-                # Decodificar el arreglo NumPy a una imagen OpenCV
-                img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-
-                camera_id = json_data.get("id", "")
-                print(f"Id de la camara: {camera_id}")
-
-                suspicious = model.step(camera_id, img)
-                if suspicious == "suspicious":
-                    await websocket.send_json({"status": "suspicious", "camera_id": camera_id})
-                else:
-                    await websocket.send_json({"status": "safe", "camera_id": camera_id})
-
-                #camera_agent = CameraAgent(SurveillanceModel())
-                #suspicious_objects = camera_agent.detect_objects(img)
-                #print(f"Objetos sospechosos detectados: {suspicious_objects}")
-                #print("Id de la camara: ", json_data.get("id", ""))
-                
-                #await websocket.send_json({"status": "vision completed", 'suspicious_objects': 'Hola'})
-            
+                action = json_data.get("action", "")  # Identificar la acción solicitada
             except json.JSONDecodeError:
-                print("Error al decodificar el JSON recibido")
-            except KeyError:
-                print("El JSON recibido no contiene la clave 'image_base64'")
-            except Exception as e:
-                print(f"Error procesando la imagen: {e}")
-                try:
-                    json_data = json.loads(data)
-                    #print(f"JSON recibido: {json_data}")
+                await websocket.send_json({"status": "error", "message": "JSON decode error"})
+                continue
+
+            try:
+                if action == "send_image":
                     
                     # Acceder a la imagen en base64 del JSON
-                    drone_position = json_data.get("coordinates", "")
+                    base64_str = json_data.get("image_base64", "")
+                    
+                    # Decodificar la cadena base64 a bytes
+                    img_data = base64.b64decode(base64_str)
+                    
+                    # Convertir los bytes a un arreglo NumPy
+                    nparr = np.frombuffer(img_data, np.uint8)
+                    
+                    # Decodificar el arreglo NumPy a una imagen OpenCV
+                    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+                    camera_id = json_data.get("id", "")
+                    print(f"Id de la camara: {camera_id}")
+
+                    object_position = json_data.get("coordinates", "")
+                    print(f"Posicion del objeto: {object_position}")
+
+                    suspicious = model.step(camera_id, img, object_position)
+                    if suspicious == "suspicious":
+                        await websocket.send_json({"status": "suspicious", "camera_id": camera_id})
+                    else:
+                        await websocket.send_json({"status": "safe", "camera_id": camera_id})
+
+                elif action == "send_drone_position":
+                    drone_position = list(json_data.get("coordinates", ""))
                     print(f"Posicion del dron: {drone_position}")
-                except KeyError:
-                    print("El JSON recibido no contiene la clave 'id'")
+
+                    path = model.create_path(drone_position)
+
+                    await websocket.send_json({"status": "path sent", "path": "path"})
+
+                elif action == "close":
+                    await websocket.close()
+                    break
             
-        elif data == "close":
-            await websocket.close()
-            break
+            except KeyError:
+                print("El JSON recibido no contiene la clave solicitada")
+            except Exception as e:
+                print(f"Error procesando la peticion: {e}")

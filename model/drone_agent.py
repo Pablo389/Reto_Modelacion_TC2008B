@@ -2,16 +2,56 @@ import agentpy as ap
 import numpy as np
 import heapq
 from owlready2 import *
+from ultralytics import YOLO
+import json
 
-class Drone(ap.Agent):
+class DroneAgent(ap.Agent):
     def setup(self, initial_position):
         self.path = []
         self.position = initial_position   # Posición inicial del dron UNITY DARA LA POSICION DESDE LA QUE SE TIENE QUE LLEGAR
         self.reached_destination = False
+        self.safe_objects = set()  # Conjunto para objetos seguros
+        self.suspicious_objects = set()  # Conjunto para objetos sospechosos
+        self.load_ontology()
+        self.model = YOLO("yolov8s.pt")  # Cargar el modelo YOLO solo una vez
 
     def load_ontology(self):
         # Cargar la ontología creada
         self.ontology = get_ontology("ontology.owl").load()
+        for obj in self.ontology.SafeObject.instances():
+            self.safe_objects.add(obj.name)
+        for obj in self.ontology.SuspiciousObject.instances():
+            self.suspicious_objects.add(obj.name)
+    
+    def detect_objects(self, image_path):
+        """ Método para procesar objetos detectados """
+        # Cargar y procesar la imagen usando el modelo YOLO
+        results = self.model(image_path)
+        #results[0].show()
+        
+        # Extraer objetos detectados
+        detected_objects = []
+        json_result = results[0].tojson()
+        
+        json_result = json.loads(json_result)
+        #print(type(json_result[0]))
+        print(json_result)
+        for obj in json_result:
+            detected_objects.append(obj["name"])
+        
+        # Analizar los objetos detectados
+        suspicious_detected = []
+        for obj in detected_objects:
+            if obj in self.suspicious_objects:
+                suspicious_detected.append(obj)
+                print(f"Alerta: Objeto sospechoso detectado - {obj}")
+            elif obj in self.safe_objects:
+                print(f"Objeto seguro detectado - {obj}")
+            else:
+                suspicious_detected.append(obj)
+                print(f"Alerta: Objeto desconocido detectado - {obj}")
+        
+        return suspicious_detected
 
     def investigate(self, position, object_name): #Esta es la posicion que me manda en un principio unity deol objeto sospechoso
         start = self.position
@@ -32,7 +72,6 @@ class Drone(ap.Agent):
 
         if self.reached_destination:
             self.perform_additional_moves(modified_position, object_name)
-
 
     def perform_additional_moves(self, target_position, object_name):
         # Realizar movimientos adicionales, como girar o subir/bajar
@@ -56,19 +95,6 @@ class Drone(ap.Agent):
         #Agregar la logica para dar alerta a guardia FALTA VER SI SOLO ASI TAL CUAL
         if self.is_suspicious(object_name):
             self.confirm_alert(target_position, object_name)
-
-    def confirm_alert(self, target_position, object_name):
-        print(f"Confirming alert at position: {target_position}")
-        if self.model.guard:  # Asegúrate de que haya al menos un guardia
-            guard = self.model.guard[0]  # Suponiendo un único guardia para simplificar
-            modified_position = (target_position[0], target_position[1] - 2, target_position[2])
-            guard.receive_alert(modified_position, object_name)
-        self.reached_destination = False  # Resetear para la siguiente misión
-
-    def is_suspicious(self, object_name):
-        # Lógica para determinar si el objeto es sospechoso utilizando la ontología
-        obj_instance = self.ontology.search_one(iri=f"*{object_name}")
-        return isinstance(obj_instance, self.ontology.SuspiciousObject) if obj_instance else False
 
     def move_to(self, position): #ESTO TECNICAMENTE NO LO NECESITAMOS PORQUE SE MUEVE EN UNITY, SEGUN NUESTRAS COORDENADAS
         if self.position != position:
@@ -125,4 +151,4 @@ class Drone(ap.Agent):
                 f = new_g + heuristic(neighbor, goal)
                 heapq.heappush(open_list, (f, new_g, neighbor, new_path))
 
-        return []
+        return open_list
