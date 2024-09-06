@@ -79,8 +79,24 @@ async def websocket_endpoint(websocket: WebSocket):
 
                     if model.stage == "patrolling":
                         await websocket.send_json({"status": 'returning'})
-                    elif model.stage == "final":
+                    elif model.stage == "guard_investigating":
                         await websocket.send_json({"status": 'police'})
+
+                elif action == "send_police_image":
+                    base64_str = json_data.get("image_base64", "")
+                    img_data = base64.b64decode(base64_str)
+                    nparr = np.frombuffer(img_data, np.uint8)
+                    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+                    camera_id = int(json_data.get("id", ""))
+                    print(f"Id de la camara: {camera_id}")
+
+                    model.step(camera_id, img)
+
+                    if model.stage == "patrolling":
+                        await websocket.send_json({"status": 'returning'})
+                    elif model.stage == "final_alert":
+                        await websocket.send_json({"status": 'end'})
 
                 elif action == "close":
                     await websocket.close()

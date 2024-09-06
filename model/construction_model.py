@@ -31,3 +31,7 @@ class SurveillanceModel(ap.Model):
             print("Drone is investigating")
             self.drone[0].investigate_area(img)
             self.guard[0].step()
+
+        elif self.stage == 'guard_investigating':
+            print("Guard is investigating")
+            self.guard[0].explore_area_with_drone(img)

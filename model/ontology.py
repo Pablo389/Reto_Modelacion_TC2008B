@@ -13,25 +13,29 @@ with onto:
     class SafeObject(KnownObject):
         pass
 
-    class RiskLevel(KnownObject >> float, FunctionalProperty):
-        pass
+    # Definición de propiedades de datos
+    class RiskLevel(DataProperty):
+        domain = [KnownObject]
+        range = [float]
 
-    class RecommendedAction(KnownObject >> str, FunctionalProperty):
-        pass
+    class RecommendedAction(DataProperty):
+        domain = [KnownObject]
+        range = [str]
+
 
 # Añadir ejemplos a la ontología
 car = SafeObject("car")
 dog = SafeObject("dog")
 person = SuspiciousObject("person")
 
-car.riskLevel = 0.1
-car.recommendedAction = "ignore"
+car.RiskLevel.append(0.1)
+car.RecommendedAction.append("ignore")
 
-dog.riskLevel = 0.2
-dog.recommendedAction = "monitor"
+dog.RiskLevel.append(0.2)
+dog.RecommendedAction.append("ignore")
 
-person.riskLevel = 0.8
-person.recommendedAction = "investigate"
+person.RiskLevel.append(0.8)
+person.RecommendedAction.append("investigate")
 
 # Guardar la ontología
 onto.save(file="ontology.owl")
