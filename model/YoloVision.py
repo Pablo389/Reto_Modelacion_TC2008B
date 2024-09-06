@@ -30,20 +30,20 @@ class YoloVision():
         
         json_result = json.loads(json_result)
         #print(type(json_result[0]))
-        print(json_result)
+        #print(json_result)
         for obj in json_result:
-            detected_objects.append(obj["name"])
+            detected_objects.append(obj)
         
         # Analizar los objetos detectados
         suspicious_detected = []
         for obj in detected_objects:
-            if obj in self.suspicious_objects:
+            if obj['name'] in self.suspicious_objects:
                 suspicious_detected.append(obj)
-                print(f"Alerta: Objeto sospechoso detectado - {obj}")
-            elif obj in self.safe_objects:
-                print(f"Objeto seguro detectado - {obj}")
+                print(f"Alerta: Objeto sospechoso detectado - {obj['name']}")
+            elif obj['name'] in self.safe_objects:
+                print(f"Objeto seguro detectado - {obj['name']}")
             else:
                 suspicious_detected.append(obj)
-                print(f"Alerta: Objeto desconocido detectado - {obj}")
+                print(f"Alerta: Objeto desconocido detectado - {obj['name']}")
 
         return suspicious_detected

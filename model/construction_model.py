@@ -8,6 +8,7 @@ class SurveillanceModel(ap.Model):
     def setup(self):
 
         self.alerts = []
+        self.drone_alerts = []
         self.suspicious_obj_pos = None
         self.stage = 'patrolling'
 
