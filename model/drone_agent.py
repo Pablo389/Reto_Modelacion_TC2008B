@@ -30,17 +30,25 @@ class DroneAgent(ap.Agent):
             self.investigating_steps += 1
             print(f"Drone is investigating the area at position {self.target_position}")
 
-            # El dron toma una nueva imagen y hace un análisis en esa posición
             detected_objects = self.vision.detect_objects(img)
 
             # Consultar la ontología para obtener información del objeto
             for obj in detected_objects:
                 if obj['confidence'] > 0.5:
-                    print(f"Drone detected a suspicious object: {obj['name']} with risk level {obj['confidence']}.")
-                    self.send_alert(obj, self.target_position)
-                    self.model.stage = "final"
-                else:
-                    print(f"Drone detected {obj['name']} but it is not considered a risk.")
+                    detected_obj = self.ontology.search_one(iri=f"*{obj['name']}")
+                    
+                    if detected_obj:
+                        risk_level = detected_obj.RiskLevel[0] if detected_obj.RiskLevel else 0
+                        recommended_action = detected_obj.RecommendedAction[0] if detected_obj.RecommendedAction else "ignore"
+
+                        # Enviar la alerta al guardia si es relevante
+                        if risk_level > 0.5:
+                            print(f"Drone detected a suspicious object: {obj['name']} with risk level {risk_level}.")
+                            self.model.guard[0].send_alert(obj, self.target_position)
+                        else:
+                            print(f"Drone detected {obj['name']} but it is not considered a risk.")
+                    else:
+                        print(f"Drone detected an object {obj['name']} that is not in the ontology.")
 
     def send_alert(self, object, position):
         alert = {
