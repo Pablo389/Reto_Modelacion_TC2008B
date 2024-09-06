@@ -1,54 +1,31 @@
 import agentpy as ap
 from owlready2 import *
-from ultralytics import YOLO
 import json
-
+from model.YoloVision import YoloVision
+ 
 class CameraAgent(ap.Agent):
     
     def setup(self):
-        self.safe_objects = set()  # Conjunto para objetos seguros
-        self.suspicious_objects = set()  # Conjunto para objetos sospechosos
-        self.load_ontology()
-        self.model = YOLO("yolov8s.pt")  # Cargar el modelo YOLO solo una vez
         self.is_moving = True
+        self.vision = YoloVision()
     
-    def load_ontology(self):
-        # Cargar la ontología creada
-        self.ontology = get_ontology("ontology.owl").load()
-        for obj in self.ontology.SafeObject.instances():
-            self.safe_objects.add(obj.name)
-        for obj in self.ontology.SuspiciousObject.instances():
-            self.suspicious_objects.add(obj.name)
-    
-    def detect_objects(self, image_path):
-        """ Método para procesar objetos detectados """
-        # Cargar y procesar la imagen usando el modelo YOLO
-        results = self.model(image_path)
-        #results[0].show()
+    def detect_objects(self, image_path, object_position):
+        suspicious_detected = self.vision.detect_objects(image_path)
+        print(f"Camera {self.id} detected: {suspicious_detected}")
         
-        # Extraer objetos detectados
-        detected_objects = []
-        json_result = results[0].tojson()
-        
-        json_result = json.loads(json_result)
-        #print(type(json_result[0]))
-        print(json_result)
-        for obj in json_result:
-            detected_objects.append(obj["name"])
-        
-        # Analizar los objetos detectados
-        suspicious_detected = []
-        for obj in detected_objects:
-            if obj in self.suspicious_objects:
-                suspicious_detected.append(obj)
-                print(f"Alerta: Objeto sospechoso detectado - {obj}")
-            elif obj in self.safe_objects:
-                print(f"Objeto seguro detectado - {obj}")
-            else:
-                suspicious_detected.append(obj)
-                print(f"Alerta: Objeto desconocido detectado - {obj}")
-        
+        for obj in suspicious_detected:
+            self.send_alert(obj, object_position)
+
         return suspicious_detected
     
-    def stop_moving(self):
-        self.is_moving = False
+    def send_alert(self, object_name, position):
+        alert = {
+            'camera_id': self.id,
+            'object_name': object_name,
+            'position': position
+        }
+        self.model.alerts.append(alert)
+        print(f"Camera {self.id} sent an alert: {object_name} detected at {position}")
+
+    def step(self, img, object_position):
+        self.detect_objects(img, object_position)

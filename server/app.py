@@ -36,23 +36,23 @@ async def websocket_endpoint(websocket: WebSocket):
                     # Acceder a la imagen en base64 del JSON
                     base64_str = json_data.get("image_base64", "")
                     
-                    # Decodificar la cadena base64 a bytes
+                    # Decodificar la imagen para poder mandarla a YOLO
                     img_data = base64.b64decode(base64_str)
-                    
-                    # Convertir los bytes a un arreglo NumPy
                     nparr = np.frombuffer(img_data, np.uint8)
-                    
-                    # Decodificar el arreglo NumPy a una imagen OpenCV
                     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
 
-                    camera_id = json_data.get("id", "")
+                    ### Ver que hacemos aqui por que el modelo debe entrar el step con toda la info que necesite, sería intersante ver como se hace esto
+                    ## Osea no pasarle esos parametros maybe? entonces darle el json?
+
+                    camera_id = int(json_data.get("id", ""))
                     print(f"Id de la camara: {camera_id}")
 
-                    object_position = json_data.get("coordinates", "")
+                    object_position = json_data.get("coordinates", "") #Que tipo de dato es esto?
                     print(f"Posicion del objeto: {object_position}")
 
-                    suspicious = model.step(camera_id, img, object_position)
-                    if suspicious == "suspicious":
+                    model.step(camera_id, img, object_position)
+
+                    if model.stage == "investigating":
                         await websocket.send_json({"status": "suspicious", "camera_id": camera_id})
                     else:
                         await websocket.send_json({"status": "safe", "camera_id": camera_id})
@@ -61,9 +61,9 @@ async def websocket_endpoint(websocket: WebSocket):
                     drone_position = list(json_data.get("coordinates", ""))
                     print(f"Posicion del dron: {drone_position}")
 
-                    path = model.create_path(drone_position)
+                    object_position = model.drone[0].target_position
 
-                    await websocket.send_json({"status": "path sent", "path": "path"})
+                    await websocket.send_json({"status": "path sent", "path": object_position})
 
                 elif action == "close":
                     await websocket.close()

@@ -4,54 +4,40 @@ import heapq
 from owlready2 import *
 from ultralytics import YOLO
 import json
+from model.YoloVision import YoloVision
 
 class DroneAgent(ap.Agent):
-    def setup(self, initial_position):
-        self.path = []
-        self.position = initial_position   # Posición inicial del dron UNITY DARA LA POSICION DESDE LA QUE SE TIENE QUE LLEGAR
+    def setup(self):
+        self.path = []  # Posición inicial del dron UNITY DARA LA POSICION DESDE LA QUE SE TIENE QUE LLEGAR
         self.reached_destination = False
-        self.safe_objects = set()  # Conjunto para objetos seguros
-        self.suspicious_objects = set()  # Conjunto para objetos sospechosos
-        self.load_ontology()
-        self.model = YOLO("yolov8s.pt")  # Cargar el modelo YOLO solo una vez
 
-    def load_ontology(self):
-        # Cargar la ontología creada
-        self.ontology = get_ontology("ontology.owl").load()
-        for obj in self.ontology.SafeObject.instances():
-            self.safe_objects.add(obj.name)
-        for obj in self.ontology.SuspiciousObject.instances():
-            self.suspicious_objects.add(obj.name)
+        self.state = 'patrolling'  # Estados: 'patrolling', 'investigating', 'returning'
+        self.target_position = None
+        self.object_name = None
+
+        self.vision = YoloVision()
+
+    def receive_alert(self, alert):
+        if self.state == 'patrolling':
+            print(f"Drone received alert: {alert['object_name']} detected at {alert['position']} by camera {alert['camera_id']}")
+            self.state = 'investigating'
+            self.target_position = alert['position']
+            self.object_name = alert['object_name']
+            self.model.stage = 'investigating'
     
     def detect_objects(self, image_path):
-        """ Método para procesar objetos detectados """
-        # Cargar y procesar la imagen usando el modelo YOLO
-        results = self.model(image_path)
-        #results[0].show()
-        
-        # Extraer objetos detectados
-        detected_objects = []
-        json_result = results[0].tojson()
-        
-        json_result = json.loads(json_result)
-        #print(type(json_result[0]))
-        print(json_result)
-        for obj in json_result:
-            detected_objects.append(obj["name"])
-        
-        # Analizar los objetos detectados
-        suspicious_detected = []
-        for obj in detected_objects:
-            if obj in self.suspicious_objects:
-                suspicious_detected.append(obj)
-                print(f"Alerta: Objeto sospechoso detectado - {obj}")
-            elif obj in self.safe_objects:
-                print(f"Objeto seguro detectado - {obj}")
-            else:
-                suspicious_detected.append(obj)
-                print(f"Alerta: Objeto desconocido detectado - {obj}")
-        
+        suspicious_detected = self.vision.detect_objects(image_path)
+
         return suspicious_detected
+    
+    def search_path(self, start, goal):
+        # Implementar algoritmo de búsqueda de camino
+        return []
+    
+    def step(self):
+        if self.model.alerts:
+            alert = self.model.alerts.pop(0)
+            self.receive_alert(alert)
 
     def investigate(self, position, object_name): #Esta es la posicion que me manda en un principio unity deol objeto sospechoso
         start = self.position
