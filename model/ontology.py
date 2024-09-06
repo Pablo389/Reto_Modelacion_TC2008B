@@ -28,7 +28,7 @@ car.riskLevel = 0.1
 car.recommendedAction = "ignore"
 
 toilet.riskLevel = 0.2
-toilet.recommendedAction = "ignore"
+toilet.recommendedAction = "monitor"
 
 traffic_light.riskLevel = 0.8
 traffic_light.recommendedAction = "investigate"
