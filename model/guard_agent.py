@@ -7,7 +7,6 @@ class SecurityGuard(ap.Agent):
     def receive_alert(self, position, object_name):
         print(f"Guard received alert about {object_name} at {position}. Investigating...")
 
-        # Explorar la zona usando el dron
         self.explore_area(position, object_name)
 
     def explore_area(self, position, object_name):
@@ -22,7 +21,10 @@ class SecurityGuard(ap.Agent):
             print(f"Exploration {exploration_time}, certainty {certainty}")
 
         avg_certainty = certainty_sum / checks
-        if avg_certainty > 0.6 and exploration_time > 2:
-            print("General alert! Suspicious object confirmed.")
+        detected_obj = self.model.drone[0].ontology.search_one(iri=f"*{object_name}")
+        risk_level = detected_obj.riskLevel if detected_obj else 0
+
+        if avg_certainty > 0.6 and exploration_time > 2 and risk_level > 0.5:
+            print(f"General alert! {object_name} is confirmed as suspicious with risk level {risk_level} and certainty {avg_certainty}.")
         else:
-            print("False alarm. Object seems safe.")
+            print(f"False alarm. {object_name} seems safe or uncertain.")

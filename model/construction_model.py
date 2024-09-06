@@ -6,9 +6,6 @@ from model.guard_agent import SecurityGuard
 class SurveillanceModel(ap.Model):
     def setup(self):
         self.alerts = []
-        self.drone_alerts = []
-        self.suspicious_obj_pos = None
-        self.stage = 'patrolling'
         self.cameras = ap.AgentList(self, 4, CameraAgent)
         self.guard = ap.AgentList(self, 1, SecurityGuard)
         self.drone = ap.AgentList(self, 1, DroneAgent)
