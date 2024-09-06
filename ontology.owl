@@ -8,6 +8,18 @@
 
 <owl:Ontology rdf:about="http://example.org/onto.owl"/>
 
+<owl:DatatypeProperty rdf:about="#RiskLevel">
+  <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#decimal"/>
+  <rdfs:domain rdf:resource="#KnownObject"/>
+</owl:DatatypeProperty>
+
+<owl:DatatypeProperty rdf:about="#RecommendedAction">
+  <rdf:type rdf:resource="http://www.w3.org/2002/07/owl#FunctionalProperty"/>
+  <rdfs:range rdf:resource="http://www.w3.org/2001/XMLSchema#string"/>
+  <rdfs:domain rdf:resource="#KnownObject"/>
+</owl:DatatypeProperty>
+
 <owl:Class rdf:about="#KnownObject">
   <rdfs:subClassOf rdf:resource="http://www.w3.org/2002/07/owl#Thing"/>
 </owl:Class>
@@ -24,11 +36,11 @@
   <rdf:type rdf:resource="#SafeObject"/>
 </owl:NamedIndividual>
 
-<owl:NamedIndividual rdf:about="#toilet">
+<owl:NamedIndividual rdf:about="#dog">
   <rdf:type rdf:resource="#SafeObject"/>
 </owl:NamedIndividual>
 
-<owl:NamedIndividual rdf:about="#traffic light">
+<owl:NamedIndividual rdf:about="#person">
   <rdf:type rdf:resource="#SuspiciousObject"/>
 </owl:NamedIndividual>
 

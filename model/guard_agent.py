@@ -1,10 +1,10 @@
 import agentpy as ap
-from model.Ontology import Ontology 
+from owlready2 import *
 
 class SecurityGuard(ap.Agent):
     def setup(self):
         self.is_in_control_of_drone = False
-        self.ontology = Ontology()  
+        self.ontology = get_ontology("ontology.owl").load() 
 
     def receive_alert(self, position, suspicious_obj):
         print(f"Guard received alert. Taking control of the drone to investigate the area at {position}...")
@@ -55,3 +55,5 @@ class SecurityGuard(ap.Agent):
         self.is_in_control_of_drone = False
         print("Guard released control of the drone.")
 
+    def step(self):
+        pass

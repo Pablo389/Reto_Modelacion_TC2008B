@@ -16,12 +16,18 @@ class SurveillanceModel(ap.Model):
         self.guard = ap.AgentList(self, 1, SecurityGuard)
         self.drone = ap.AgentList(self, 1, DroneAgent)
 
-    def step(self, camera_id: int, img: str, object_position):
+    def step(self, camera_id: int, img: str, object_position = None):
         #Nueva logica: siempre las camaras van a ver si ven algo, sii no, el dron ejecuta su camino
 
-        for camera in self.cameras:
-            if camera.id == camera_id:
-                print(f"Camera {camera_id} is active")
-                camera.step(img, object_position)
-                
-        self.drone[0].step()
+        if self.stage == 'patrolling':
+            for camera in self.cameras:
+                if camera.id == camera_id:
+                    print(f"Camera {camera_id} is active")
+                    camera.step(img, object_position)
+                    
+            self.drone[0].step()
+
+        elif self.stage == 'investigating':
+            print("Drone is investigating")
+            self.drone[0].investigate_area(img)
+            self.guard[0].step()

@@ -18,11 +18,12 @@ class YoloVision():
             for obj in self.ontology.SuspiciousObject.instances():
                 self.suspicious_objects.add(obj.name)
         
-    def detect_objects(self, image_path):
+    def detect_objects(self, image_path, show_image=False):
         """ Método para procesar objetos detectados """
         # Cargar y procesar la imagen usando el modelo YOLO
         results = self.model(image_path)
-        #results[0].show()
+        if show_image:
+            results[0].show()
         
         # Extraer objetos detectados
         detected_objects = []

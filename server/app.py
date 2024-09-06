@@ -10,6 +10,7 @@ app = FastAPI()
 
 model = SurveillanceModel()
 model.setup()
+print("Modelo inicializado")
 
 @app.get("/")
 def read_root():
@@ -64,6 +65,20 @@ async def websocket_endpoint(websocket: WebSocket):
                     object_position = model.drone[0].target_position
 
                     await websocket.send_json({"status": "path sent", "path": object_position})
+
+                elif action == "send_drone_image":
+                    base64_str = json_data.get("image_base64", "")
+                    img_data = base64.b64decode(base64_str)
+                    nparr = np.frombuffer(img_data, np.uint8)
+                    img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+
+                    camera_id = int(json_data.get("id", ""))
+                    print(f"Id de la camara: {camera_id}")
+
+                    model.step(camera_id, img)
+
+                    if model.stage == "patrolling":
+                        await websocket.send_json({"status": 'returning'})
 
                 elif action == "close":
                     await websocket.close()

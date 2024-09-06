@@ -21,17 +21,17 @@ with onto:
 
 # Añadir ejemplos a la ontología
 car = SafeObject("car")
-toilet = SafeObject("toilet")
-traffic_light = SuspiciousObject("traffic_light")
+dog = SafeObject("dog")
+person = SuspiciousObject("person")
 
 car.riskLevel = 0.1
 car.recommendedAction = "ignore"
 
-toilet.riskLevel = 0.2
-toilet.recommendedAction = "monitor"
+dog.riskLevel = 0.2
+dog.recommendedAction = "monitor"
 
-traffic_light.riskLevel = 0.8
-traffic_light.recommendedAction = "investigate"
+person.riskLevel = 0.8
+person.recommendedAction = "investigate"
 
 # Guardar la ontología
 onto.save(file="ontology.owl")
