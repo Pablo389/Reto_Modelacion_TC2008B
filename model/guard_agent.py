@@ -55,5 +55,10 @@ class SecurityGuard(ap.Agent):
         self.is_in_control_of_drone = False
         print("Guard released control of the drone.")
 
+    def receive_alert(self, alert):
+        print(f"Guard received alert: {alert['object']} detected at {alert['position']}")
+
     def step(self):
-        pass
+        if self.model.drone_alerts:
+            alert = self.model.drone_alerts.pop(0)
+            self.receive_alert(alert)

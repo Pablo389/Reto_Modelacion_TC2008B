@@ -79,6 +79,8 @@ async def websocket_endpoint(websocket: WebSocket):
 
                     if model.stage == "patrolling":
                         await websocket.send_json({"status": 'returning'})
+                    elif model.stage == "final":
+                        await websocket.send_json({"status": 'police'})
 
                 elif action == "close":
                     await websocket.close()
