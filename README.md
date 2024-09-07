@@ -46,6 +46,6 @@ Si deseas contribuir al proyecto, por favor realiza un fork del repositorio y en
 
 Este proyecto está licenciado bajo la Licencia MIT. Consulta el archivo LICENSE para más detalles.
 
-## Link a el drive con el ZIP de unity, proyecto con Assets y Packages folder
+## Link a el drive con el ZIP de unity, proyecto con Assets y Packages folder. También contiene el video de ejecución.
 
 https://drive.google.com/drive/folders/1y3Lph-4Z3eNWo5LYAxwvCAacWwRIZmdX?usp=sharing
