@@ -8,7 +8,7 @@ class YoloVision():
         self.safe_objects = set()  # Conjunto para objetos seguros
         self.suspicious_objects = set()  # Conjunto para objetos sospechosos
         self.load_ontology()
-        self.model = YOLO("yolov8s.pt")  # Cargar el modelo YOLO solo una vez
+        self.model = YOLO("yolov8n_beto.pt")  # Cargar el modelo YOLO solo una vez
 
     def load_ontology(self):
             # Cargar la ontología creada
@@ -44,7 +44,7 @@ class YoloVision():
             elif obj['name'] in self.safe_objects:
                 print(f"Objeto seguro detectado - {obj['name']}")
             else:
-                suspicious_detected.append(obj)
+                #suspicious_detected.append(obj)
                 print(f"Alerta: Objeto desconocido detectado - {obj['name']}")
 
         return suspicious_detected
